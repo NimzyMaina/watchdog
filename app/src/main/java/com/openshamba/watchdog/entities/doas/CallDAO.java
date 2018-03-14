@@ -31,7 +31,7 @@ public interface CallDAO {
     public LiveData<List<Call>> getAllCalls();
 
     @Query("SELECT * FROM call where phone = :mobileIn and complete = 0")
-    public LiveData<Call> getLastCall(String mobileIn);
+    public Call getLastCall(String mobileIn);
 
     @Query("SELECT * FROM call where synced = 0 and complete = 1")
     public LiveData<List<Call>> getUnsyncedCalls();

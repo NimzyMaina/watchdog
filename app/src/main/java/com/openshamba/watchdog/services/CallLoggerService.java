@@ -48,6 +48,7 @@ import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -63,6 +64,7 @@ public class CallLoggerService extends Service {
     private SharedPreferences mPrefs;
     private boolean mIsOutgoing = false;
     private Service mService = null;
+    private String phone;
 
     // Pop up shit
     private WindowManager windowManager;
@@ -128,6 +130,7 @@ public class CallLoggerService extends Service {
     private void startTask(final String number) {
 
         final TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+        phone = number;
 
         mIsOutgoing = false;
 
@@ -210,7 +213,9 @@ public class CallLoggerService extends Service {
             @Override
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(),"Personal Call",Toast.LENGTH_SHORT).show();
-                Call call = new Call();
+                Call call = new Call(phone,"PERSONAL");
+                saveCall(call);
+                showDialog(false);
             }
         });
 
@@ -219,6 +224,9 @@ public class CallLoggerService extends Service {
             public void onClick(View v) {
                 String x = spinner.getSelectedItem().toString();
                 Toast.makeText(getApplicationContext(),"Business client "+ x,Toast.LENGTH_SHORT).show();
+                Call call = new Call(phone,"BUSINESS",x);
+                saveCall(call);
+                showDialog(false);
             }
         });
 
@@ -260,18 +268,10 @@ public class CallLoggerService extends Service {
 
     }
 
-    private boolean canMakeSmores(){
-
-        return(Build.VERSION.SDK_INT>Build.VERSION_CODES.LOLLIPOP_MR1);
-
-    }
-
     private boolean hasPermission(String permission){
 
-        if(canMakeSmores()){
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             return(mContext.checkSelfPermission(permission)== PackageManager.PERMISSION_GRANTED);
-
         }
 
         return true;
@@ -286,6 +286,8 @@ public class CallLoggerService extends Service {
     public void saveCall(Call call){
         executor.execute(() -> {
             callDAO.insertCall(call);
+            Log.d("NIMZYMAINA","Call Saved");
+            Log.d("NIMZYMAINA",call.toString());
         });
     }
 
