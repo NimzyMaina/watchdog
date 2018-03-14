@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Watch Dog</string>
+
+    <string-array name="codes_arrays">
+        <item>DUKA PEPE</item>
+        <item>KPMG</item>
+        <item>Google</item>
+        <item>MicroSoft</item>
+    </string-array>
 </resources>

@@ -16,7 +16,19 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    dataBinding {
+        enabled = true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
 }
+
+def archComp = '1.0.0'
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
@@ -28,4 +40,13 @@ dependencies {
 
     // Dexter runtime permissions
     implementation 'com.karumi:dexter:4.2.0'
+
+    // Eventbus
+    implementation 'org.greenrobot:eventbus:3.1.1'
+
+    // Room
+    implementation "android.arch.persistence.room:runtime:${archComp}"
+    annotationProcessor "android.arch.persistence.room:compiler:${archComp}"
+    implementation "android.arch.lifecycle:extensions:${archComp}"
+    implementation "android.arch.persistence.room:rxjava2:${archComp}"
 }

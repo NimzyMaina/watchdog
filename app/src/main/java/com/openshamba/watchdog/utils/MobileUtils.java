@@ -75,7 +75,7 @@ public class MobileUtils {
             }
         if (simQuantity > 1) {
             int sim = Constants.DISABLED;
-            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP_MR1) {
                 if (CustomApplication.isOldMtkDevice()) {
                     try {
                         Class<?> c = Class.forName(MEDIATEK);

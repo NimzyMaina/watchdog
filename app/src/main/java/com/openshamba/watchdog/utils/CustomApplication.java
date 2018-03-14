@@ -1,6 +1,7 @@
 package com.openshamba.watchdog.utils;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
 
@@ -104,5 +105,20 @@ public class CustomApplication extends Application {
 
     public static Context getAppContext() {
         return mWeakReference.get();
+    }
+
+    public static boolean isMyServiceRunning(Class<?> serviceClass) {
+        try {
+            ActivityManager manager = (ActivityManager) mWeakReference.get().getSystemService(Context.ACTIVITY_SERVICE);
+            if (manager != null) {
+                for (ActivityManager.RunningServiceInfo serviceInfo : manager.getRunningServices(Integer.MAX_VALUE)) {
+                    if (serviceClass.getName().equals(serviceInfo.service.getClassName()))
+                        return true;
+                }
+            }
+        } catch (Exception e) {
+            return false;
+        }
+        return false;
     }
 }
