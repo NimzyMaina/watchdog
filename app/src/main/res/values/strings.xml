@@ -1,10 +1,21 @@
 <resources>
     <string name="app_name">Watch Dog</string>
 
+    <!--exit notification-->
+    <string name="press_again_exit_app">Press again to exit</string>
+
+    <!--dont edit-->
+    <string name="drawer_open">Open</string>
+    <string name="drawer_close">Close</string>
+
     <string-array name="codes_arrays">
         <item>DUKA PEPE</item>
         <item>KPMG</item>
         <item>Google</item>
         <item>MicroSoft</item>
     </string-array>
+
+    <string name="tab_call">CALLS</string>
+    <string name="tab_sms">TEXT</string>
+    <string name="tab_data">DATA</string>
 </resources>
