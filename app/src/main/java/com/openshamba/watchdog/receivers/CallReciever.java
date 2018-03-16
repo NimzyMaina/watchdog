@@ -18,6 +18,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.openshamba.watchdog.data.DatabaseCreator;
+import com.openshamba.watchdog.data.ServiceGenerator;
+import com.openshamba.watchdog.data.responses.ApiResponse;
 import com.openshamba.watchdog.entities.Call;
 import com.openshamba.watchdog.entities.doas.CallDAO;
 import com.openshamba.watchdog.events.NewOutgoingCallEvent;
@@ -34,6 +36,9 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * Created by Maina on 3/13/2018.
@@ -151,6 +156,31 @@ public class CallReciever extends BaseCallReceiver {
                 callDAO.insertCall(call);
                 Log.d("NIMZYMAINA","Call updated");
                 Log.d("NIMZYMAINA",call.toString());
+            });
+
+            final Call c = call;
+
+            retrofit2.Call<ApiResponse> call = ServiceGenerator.getClient().saveCall(this.call);
+
+            call.enqueue(new Callback<ApiResponse>() {
+                @Override
+                public void onResponse(retrofit2.Call<ApiResponse> call, Response<ApiResponse> response) {
+                    if(response.isSuccessful()){
+                        c.setSynced(true);
+                        executor.execute(() -> {
+                            callDAO.insertCall(c);
+                            Log.d("NIMZYMAINA","Call Synced");
+                            Log.d("NIMZYMAINA",call.toString());
+                        });
+                    }else{
+                        Log.d("NIMZYMAINA","Call server reached but failed to sync");
+                    }
+                }
+
+                @Override
+                public void onFailure(retrofit2.Call<ApiResponse> call, Throwable t) {
+                    Log.d("NIMZYMAINA","Call server not reachable");
+                }
             });
         }
 
