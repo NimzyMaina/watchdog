@@ -27,7 +27,7 @@ public interface CallDAO {
     @Delete
     public void deleteCall(Call call);
 
-    @Query("SELECT * FROM call")
+    @Query("SELECT * FROM call ORDER BY start DESC")
     public LiveData<List<Call>> getAllCalls();
 
     @Query("SELECT * FROM call where phone = :mobileIn and complete = 0")

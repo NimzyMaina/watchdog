@@ -27,6 +27,7 @@ import com.openshamba.watchdog.services.CallLoggerService;
 import com.openshamba.watchdog.utils.Constants;
 import com.openshamba.watchdog.utils.CustomApplication;
 import com.openshamba.watchdog.utils.MobileUtils;
+import com.openshamba.watchdog.utils.SessionManager;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -51,12 +52,14 @@ public class CallReciever extends BaseCallReceiver {
     private CallDAO callDAO = null;
     private final Executor executor = Executors.newFixedThreadPool(2);
     private Call call;
+    private SessionManager session;
 
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context,intent);
         this.context = context;
         callDAO = DatabaseCreator.getWatchDogDatabase(context).CallDatabase();
+        session = new SessionManager(context);
 
         String state = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
         mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -160,7 +163,7 @@ public class CallReciever extends BaseCallReceiver {
 
             final Call c = call;
 
-            retrofit2.Call<ApiResponse> call = ServiceGenerator.getClient().saveCall(this.call);
+            retrofit2.Call<ApiResponse> call = ServiceGenerator.getClient(session.getKeyApiKey()).saveCall(this.call);
 
             call.enqueue(new Callback<ApiResponse>() {
                 @Override

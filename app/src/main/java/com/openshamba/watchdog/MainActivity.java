@@ -49,13 +49,13 @@ import com.openshamba.watchdog.utils.CustomApplication;
 import com.openshamba.watchdog.utils.MobileUtils;
 import com.openshamba.watchdog.utils.Tools;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
     private ActionBarDrawerToggle mDrawerToggle;
     private Toolbar toolbar;
     private AppBarLayout appBarLayout;
     private DrawerLayout drawerLayout;
-    public FloatingActionButton fab;
+    //public FloatingActionButton fab;
     private Toolbar searchToolbar;
     private ViewPager viewPager;
     private View parent_view;
@@ -75,6 +75,8 @@ public class MainActivity extends AppCompatActivity {
         if(!isSystemAlertPermissionGranted(getApplicationContext())){
             askSystemAlertPermission(MainActivity.this,ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE);
         }
+
+        checkAuth();
 
         setupDrawerLayout();
         initComponent();
@@ -200,10 +202,10 @@ public class MainActivity extends AppCompatActivity {
         CoordinatorLayout.LayoutParams layout_invisible = new CoordinatorLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0);
         if(visible){
             appBarLayout.setLayoutParams(layout_visible);
-            fab.show();
+            //fab.show();
         }else{
             appBarLayout.setLayoutParams(layout_invisible);
-            fab.hide();
+            //fab.hide();
         }
     }
 
@@ -257,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
         toolbar = (Toolbar) findViewById(R.id.toolbar_viewpager);
         appBarLayout = (AppBarLayout) findViewById(R.id.app_bar_layout);
         searchToolbar = (Toolbar) findViewById(R.id.toolbar_search);
-        fab = (FloatingActionButton) findViewById(R.id.fab);
+        //fab = (FloatingActionButton) findViewById(R.id.fab);
         viewPager = (ViewPager) findViewById(R.id.viewpager);
     }
 
@@ -302,13 +304,13 @@ public class MainActivity extends AppCompatActivity {
                 viewPager.setCurrentItem(tab.getPosition());
                 switch (tab.getPosition()) {
                     case 0:
-                        fab.setImageResource(R.drawable.ic_add_friend);
+                        //fab.setImageResource(R.drawable.ic_add_friend);
                         break;
                     case 1:
-                        fab.setImageResource(R.drawable.ic_create);
+                        //fab.setImageResource(R.drawable.ic_create);
                         break;
                     case 2:
-                        fab.setImageResource(R.drawable.ic_add_group);
+                        //fab.setImageResource(R.drawable.ic_add_group);
                         break;
                 }
             }

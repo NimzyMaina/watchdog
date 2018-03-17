@@ -14,7 +14,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ServiceGenerator {
-    private static final String API_BASE_URL = "";
+    private static final String API_BASE_URL = "http://192.168.0.14/watchdog-api/public/index.php/";
     private static Retrofit retrofit;
 
     private static OkHttpClient.Builder httpClient = new OkHttpClient.Builder()

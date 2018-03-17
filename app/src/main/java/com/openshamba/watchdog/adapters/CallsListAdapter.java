@@ -23,6 +23,7 @@ import com.openshamba.watchdog.R;
 import com.openshamba.watchdog.entities.Call;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -44,6 +45,8 @@ public class CallsListAdapter extends RecyclerView.Adapter<CallsListAdapter.View
         this.ctx = ctx;
         original_items = items;
         filtered_items = items;
+        Collections.reverse(this.original_items);
+        Collections.reverse(this.filtered_items);
         selectedItems = new SparseBooleanArray();
     }
 
@@ -127,6 +130,8 @@ public class CallsListAdapter extends RecyclerView.Adapter<CallsListAdapter.View
     public void addItems(List<Call> calls) {
         this.original_items = calls;
         this.filtered_items = calls;
+        Collections.reverse(this.original_items);
+        Collections.reverse(this.filtered_items);
         notifyDataSetChanged();
     }
 
