@@ -2,6 +2,7 @@ package com.openshamba.watchdog.data;
 
 import com.openshamba.watchdog.data.responses.ApiResponse;
 import com.openshamba.watchdog.data.responses.LoginResponse;
+import com.openshamba.watchdog.entities.Sms;
 
 
 import retrofit2.Call;
@@ -27,5 +28,9 @@ public interface WatchDogClient {
     @Headers({"Cache-Control: no-cache"})
     @POST("api/v1/calls")
     Call<ApiResponse> saveCall(@Body com.openshamba.watchdog.entities.Call call);
+
+    @Headers({"Cache-Control: no-cache"})
+    @POST("api/v1/sms")
+    Call<ApiResponse> saveSms(@Body Sms sms);
 
 }

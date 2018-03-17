@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.PixelFormat;
 import android.net.Uri;
@@ -213,7 +214,8 @@ public class CallLoggerService extends Service {
             @Override
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(),"Personal Call",Toast.LENGTH_SHORT).show();
-                Call call = new Call(phone,"PERSONAL");
+                String contact = getContactName(phone,mContext);
+                Call call = new Call(phone,contact,"PERSONAL");
                 saveCall(call);
                 showDialog(false);
             }
@@ -224,7 +226,8 @@ public class CallLoggerService extends Service {
             public void onClick(View v) {
                 String x = spinner.getSelectedItem().toString();
                 Toast.makeText(getApplicationContext(),"Business client "+ x,Toast.LENGTH_SHORT).show();
-                Call call = new Call(phone,"BUSINESS",x);
+                String contact = getContactName(phone,mContext);
+                Call call = new Call(phone,contact,"BUSINESS",x);
                 saveCall(call);
                 showDialog(false);
             }

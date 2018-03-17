@@ -21,6 +21,7 @@ public class Call {
     private String type;
     private String charge_code;
     private String phone;
+    private String contact;
     private String duration;
     private String start;
     private String end;
@@ -30,10 +31,11 @@ public class Call {
     public Call(){}
 
     @Ignore
-    public Call(String phone,String type) {
+    public Call(String phone,String contact,String type) {
         this.reference = UUID.randomUUID().toString();
         this.type = type;
         this.phone = phone;
+        this.contact = contact;
         this.charge_code = "";
         this.duration = "";
         this.complete = false;
@@ -41,21 +43,23 @@ public class Call {
     }
 
     @Ignore
-    public Call(String phone,String type,String charge_code) {
+    public Call(String phone,String contact,String type,String charge_code) {
         this.reference = UUID.randomUUID().toString();
         this.type = type;
         this.phone = phone;
+        this.contact = contact;
         this.charge_code = charge_code;
         this.duration = "";
         this.complete = false;
         this.synced = false;
     }
 
+    @NonNull
     public String getReference() {
         return reference;
     }
 
-    public void setReference(String reference) {
+    public void setReference(@NonNull String reference) {
         this.reference = reference;
     }
 
@@ -81,6 +85,14 @@ public class Call {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getContact() {
+        return contact;
+    }
+
+    public void setContact(String contact) {
+        this.contact = contact;
     }
 
     public String getDuration() {
@@ -130,6 +142,7 @@ public class Call {
                 ", type='" + type + '\'' +
                 ", charge_code='" + charge_code + '\'' +
                 ", phone='" + phone + '\'' +
+                ", contact='" + contact + '\'' +
                 ", duration='" + duration + '\'' +
                 ", start='" + start + '\'' +
                 ", end='" + end + '\'' +

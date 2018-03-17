@@ -61,13 +61,13 @@ public class CallsListAdapter extends RecyclerView.Adapter<CallsListAdapter.View
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         final Call c = filtered_items.get(position);
-        holder.title.setText((c.getPhone()));
+        holder.title.setText((c.getContact()));
         if(c.getType().equals("PERSONAL")){
             holder.content.setText("PERSONAL CALL");
         }else{
             holder.content.setText(c.getCharge_code());
         }
-        holder.duration.setText(c.getDuration());
+        holder.duration.setText(c.getDuration()+ " Seconds");
         holder.time.setText(c.getStart());
 
         setAnimation(holder.itemView, position);

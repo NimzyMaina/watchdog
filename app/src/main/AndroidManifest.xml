@@ -62,6 +62,7 @@
         </receiver>
 
         <service android:name=".services.CallLoggerService" />
+        <service android:name=".services.SmsLoggerService" />
 
     </application>
 

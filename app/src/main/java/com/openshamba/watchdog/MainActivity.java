@@ -45,8 +45,10 @@ import com.openshamba.watchdog.fragments.CallFragment;
 import com.openshamba.watchdog.fragments.DataFragment;
 import com.openshamba.watchdog.fragments.FragmentAdapter;
 import com.openshamba.watchdog.fragments.SMSFragment;
+import com.openshamba.watchdog.services.SmsLoggerService;
 import com.openshamba.watchdog.utils.CustomApplication;
 import com.openshamba.watchdog.utils.MobileUtils;
+import com.openshamba.watchdog.utils.SessionManager;
 import com.openshamba.watchdog.utils.Tools;
 
 public class MainActivity extends BaseActivity {
@@ -62,6 +64,7 @@ public class MainActivity extends BaseActivity {
     private CallFragment f_call;
     private SMSFragment f_sms;
     private DataFragment f_data;
+    private TextView email,username;
 
     public static int ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE = 5469;
     private boolean isSearch = false;
@@ -74,6 +77,10 @@ public class MainActivity extends BaseActivity {
 
         if(!isSystemAlertPermissionGranted(getApplicationContext())){
             askSystemAlertPermission(MainActivity.this,ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE);
+        }
+
+        if(!CustomApplication.isMyServiceRunning(SmsLoggerService.class)){
+            startService(new Intent(getApplicationContext(), SmsLoggerService.class));
         }
 
         checkAuth();
@@ -229,6 +236,9 @@ public class MainActivity extends BaseActivity {
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 
         NavigationView view = (NavigationView) findViewById(R.id.nav_view);
+        View header = view.getHeaderView(0);
+        username = (TextView) header.findViewById(R.id.usernameNav);
+        username.setText(session.getKeyFname()+ " " + session.getKeyLname());
         view.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(MenuItem menuItem) {
