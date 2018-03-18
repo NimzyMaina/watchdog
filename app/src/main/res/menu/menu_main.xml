@@ -13,4 +13,9 @@
         android:orderInCategory="100"
         android:icon="@drawable/ic_notif"
         app:showAsAction="always" />
+
+    <item android:id="@+id/action_logout"
+        android:title="@string/logout"
+        android:orderInCategory="100"
+        app:showAsAction="never" />
 </menu>

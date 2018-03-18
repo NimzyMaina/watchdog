@@ -271,6 +271,7 @@ public class MainActivity extends BaseActivity {
         searchToolbar = (Toolbar) findViewById(R.id.toolbar_search);
         //fab = (FloatingActionButton) findViewById(R.id.fab);
         viewPager = (ViewPager) findViewById(R.id.viewpager);
+        viewPager.setOffscreenPageLimit(2);
     }
 
     private void prepareActionBar(Toolbar toolbar) {
@@ -340,9 +341,9 @@ public class MainActivity extends BaseActivity {
         if (isSearch) {
             isSearch = false;
             if (viewPager.getCurrentItem() == 0) {
-                //f_message.mAdapter.getFilter().filter("");
+                f_sms.mAdapter.getFilter().filter("");
             } else {
-                //f_contact.mAdapter.getFilter().filter("");
+                f_call.mAdapter.getFilter().filter("");
             }
             prepareActionBar(toolbar);
             searchToolbar.setVisibility(View.GONE);
@@ -380,10 +381,10 @@ public class MainActivity extends BaseActivity {
                 public boolean onQueryTextChange(String s) {
                     switch (viewPager.getCurrentItem()) {
                         case 0:
-                            //f_sms.mAdapter.getFilter().filter(s);
+                            f_sms.mAdapter.getFilter().filter(s);
                             break;
                         case 1:
-                            //f_call.mAdapter.getFilter().filter(s);
+                            f_call.mAdapter.getFilter().filter(s);
                             break;
                         case 2:
                             //f_data.mAdapter.getFilter().filter(s);
@@ -415,11 +416,17 @@ public class MainActivity extends BaseActivity {
                 supportInvalidateOptionsMenu();
                 return true;
             }
-            case android.R.id.home:
+            case android.R.id.home: {
                 closeSearch();
                 return true;
+            }
             case R.id.action_notif: {
                 Snackbar.make(parent_view, "Notifications Clicked", Snackbar.LENGTH_SHORT).show();
+                return true;
+            }
+            case R.id.action_logout: {
+                logoutUser();
+                return true;
             }
             default:
                 return super.onOptionsItemSelected(item);

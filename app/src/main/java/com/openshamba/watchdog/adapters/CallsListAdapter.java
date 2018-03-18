@@ -146,7 +146,7 @@ public class CallsListAdapter extends RecyclerView.Adapter<CallsListAdapter.View
 
             for (int i = 0; i < list.size(); i++) {
                 //TODO - add read contact name
-                String str_title = list.get(i).getPhone();//getFriend().getName();
+                String str_title = list.get(i).getContact();//getFriend().getName();
                 if (str_title.toLowerCase().contains(query)) {
                     result_list.add(list.get(i));
                 }
