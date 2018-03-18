@@ -36,10 +36,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.karumi.dexter.Dexter;
+import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.DexterError;
 import com.karumi.dexter.listener.PermissionDeniedResponse;
 import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.PermissionRequestErrorListener;
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.karumi.dexter.listener.single.PermissionListener;
 import com.openshamba.watchdog.fragments.CallFragment;
 import com.openshamba.watchdog.fragments.DataFragment;
@@ -50,6 +54,8 @@ import com.openshamba.watchdog.utils.CustomApplication;
 import com.openshamba.watchdog.utils.MobileUtils;
 import com.openshamba.watchdog.utils.SessionManager;
 import com.openshamba.watchdog.utils.Tools;
+
+import java.util.List;
 
 public class MainActivity extends BaseActivity {
 
@@ -189,7 +195,7 @@ public class MainActivity extends BaseActivity {
                     @Override
                     public void onPermissionGranted(PermissionGrantedResponse response) {
                         CustomApplication.setUp(getApplicationContext());
-                        Snackbar.make(parent_view,"Setup complete",Snackbar.LENGTH_LONG).show();
+                        //Snackbar.make(parent_view,"Setup complete",Snackbar.LENGTH_LONG).show();
                     }
 
                     @Override
