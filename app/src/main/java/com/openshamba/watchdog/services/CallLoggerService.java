@@ -1,6 +1,8 @@
 package com.openshamba.watchdog.services;
 
 import android.Manifest;
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -10,13 +12,18 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.ContentObserver;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -34,6 +41,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.karumi.dexter.Dexter;
+import com.openshamba.watchdog.MainActivity;
 import com.openshamba.watchdog.R;
 import com.openshamba.watchdog.data.DatabaseCreator;
 import com.openshamba.watchdog.data.WatchDogDatabase;
@@ -43,12 +51,14 @@ import com.openshamba.watchdog.events.NewOutgoingCallEvent;
 import com.openshamba.watchdog.utils.Constants;
 import com.openshamba.watchdog.utils.CustomApplication;
 import com.openshamba.watchdog.utils.MobileUtils;
+import com.openshamba.watchdog.utils.SessionManager;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -73,9 +83,11 @@ public class CallLoggerService extends Service {
     private WindowManager.LayoutParams params;
     private FrameLayout content;
     private Spinner spinner;
-    private ImageView close,bobo;
+    private ImageView close, bobo;
     private TextView title;
-    private Button personal,business;
+    private Button personal, business;
+    private ContentObserver observer;
+    private SessionManager session;
 
     private final Executor executor = Executors.newFixedThreadPool(2);
     private CallDAO callDAO = null;
@@ -93,7 +105,17 @@ public class CallLoggerService extends Service {
         mContext = CustomApplication.getAppContext();
         mService = this;
         mPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+        session = new SessionManager(getApplicationContext());
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            observer = new MySentSmsHandler(getApplicationContext());
+        } else {
+            observer = new MySupportSentSmsHandler(getApplicationContext());
+        }
+
+        getContentResolver().registerContentObserver(
+                Uri.parse("content://sms"), true, observer
+        );
 
         setUpDialogWindow();
 
@@ -105,9 +127,17 @@ public class CallLoggerService extends Service {
         if (!EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().register(this);
 
+        if (intent != null && intent.getAction() != null && intent.getAction().equals(Constants.ACTION.SHOW_HUD)) {
+            String number = intent.getStringExtra("phone");
+            phone = number;
+            fetchContactName(number);
+            showDialog(true);
+            mIsOutgoing = true;
+        }
+
         if (intent != null && intent.getAction() != null && intent.getAction().equals(Intent.ACTION_NEW_OUTGOING_CALL)) {
 
-            Log.d("NIMZYMAINA","Making a call received");
+            Log.d("NIMZYMAINA", "Making a call received");
 
             mCallStartedReceiver = new BroadcastReceiver() {
                 @Override
@@ -123,6 +153,33 @@ public class CallLoggerService extends Service {
 
             startTask(intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER));
 
+        } else if (intent != null && intent.getAction() != null && intent.getAction().equals(Constants.ACTION.STARTFOREGROUND_ACTION)) {
+            Intent notificationIntent = new Intent(this, MainActivity.class);
+            notificationIntent.setAction(Constants.ACTION.MAIN_ACTION);
+            notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                    | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+                    notificationIntent, 0);
+
+            Bitmap icon = BitmapFactory.decodeResource(getResources(),
+                    R.mipmap.ic_launcher);
+
+            Notification notification = new NotificationCompat.Builder(this)
+                    .setContentTitle("WatchDog Service")
+                    .setTicker("WatchDog Service")
+                    .setContentText("WatchDog Service")
+                    .setSmallIcon(R.mipmap.ic_launcher_round)
+                    .setLargeIcon(
+                            Bitmap.createScaledBitmap(icon, 128, 128, false))
+                    .setContentIntent(pendingIntent)
+                    .setOngoing(true)
+                    .build();
+            startForeground(Constants.NOTIFICATION_ID.FOREGROUND_SERVICE,
+                    notification);
+        } else if (intent != null && intent.getAction() != null && intent.getAction().equals(Constants.ACTION.STOPFOREGROUND_ACTION)) {
+            Log.d("NIMZYMAINA", "Received Stop Foreground Intent");
+            stopForeground(true);
+            stopSelf();
         }
 
         return START_STICKY;
@@ -136,35 +193,38 @@ public class CallLoggerService extends Service {
         mIsOutgoing = false;
 
         if (tm != null) {
-            tm.listen(new PhoneStateListener(){
+            tm.listen(new PhoneStateListener() {
                 @Override
                 public void onCallStateChanged(int state, String incomingNumber) {
 
-                if (CustomApplication.isMyServiceRunning(CallLoggerService.class) && !mIsOutgoing)
-                    switch (state) {
-                        case TelephonyManager.CALL_STATE_OFFHOOK:
-                            final int sim;
-                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
-                                sim = MobileUtils.getActiveSimForCall(mContext, mPrefs.getInt(Constants.PREF_OTHER[0], 1));
-                            else {
-                                Log.d("NIMZYMAINA",mPrefs.getString(Constants.PREF_OTHER[1], ""));
-                                ArrayList<String> list = new ArrayList<>(Arrays.asList(mPrefs.getString(Constants.PREF_OTHER[1], "").split(";")));
-                                sim = MobileUtils.getActiveSimForCallM(mContext, mPrefs.getInt(Constants.PREF_OTHER[0], 1), list);
-                            }
+                    if (CustomApplication.isMyServiceRunning(CallLoggerService.class) && !mIsOutgoing)
+                        switch (state) {
+                            case TelephonyManager.CALL_STATE_OFFHOOK:
+                                final int sim;
+                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+                                    sim = MobileUtils.getActiveSimForCall(mContext, mPrefs.getInt(Constants.PREF_OTHER[0], 1));
+                                else {
+                                    Log.d("NIMZYMAINA", mPrefs.getString(Constants.PREF_OTHER[1], ""));
+                                    ArrayList<String> list = new ArrayList<>(Arrays.asList(mPrefs.getString(Constants.PREF_OTHER[1], "").split(";")));
+                                    sim = MobileUtils.getActiveSimForCallM(mContext, mPrefs.getInt(Constants.PREF_OTHER[0], 1), list);
+                                }
 
-                            Log.d("NIMZYMAINA","Making a call on sim "+ sim);
-                            Toast.makeText(mContext,"SIM LOLO!! : " + sim,Toast.LENGTH_SHORT).show();
+                                Log.d("NIMZYMAINA", "Making a call on sim " + sim);
+                                Toast.makeText(mContext, "SIM : " + sim, Toast.LENGTH_SHORT).show();
+                                // todo - update sim data for call
 
-                            if(sim == 0){
-                                fetchContactName(number);
-                                showDialog(true);
-                                mIsOutgoing = true;
-                            }else {
-                                mService.stopSelf();
-                            }
+                                filterSim(number,Integer.toString(sim));
 
-                            break;
-                    }
+//                                if (sim == 0) {
+//                                    fetchContactName(number);
+//                                    showDialog(true);
+//                                    mIsOutgoing = true;
+//                                } else {
+//                                    mService.stopSelf();
+//                                }
+
+                                break;
+                        }
 
                 }
             }, PhoneStateListener.LISTEN_CALL_STATE);
@@ -172,9 +232,9 @@ public class CallLoggerService extends Service {
 
     }
 
-    private void setUpDialogWindow(){
+    private void setUpDialogWindow() {
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-        LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
+        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
 
         params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
@@ -188,8 +248,8 @@ public class CallLoggerService extends Service {
         params.y = 200;
 
         chatheadView = (RelativeLayout) inflater.inflate(R.layout.pop_up_dialog, null);
-        close=(ImageView)chatheadView.findViewById(R.id.close);
-        content=(FrameLayout)chatheadView.findViewById(R.id.content);
+        close = (ImageView) chatheadView.findViewById(R.id.close);
+        content = (FrameLayout) chatheadView.findViewById(R.id.content);
         bobo = (ImageView) chatheadView.findViewById(R.id.imagenotileft);
         spinner = (Spinner) chatheadView.findViewById(R.id.spinner);
         title = (TextView) chatheadView.findViewById(R.id.title);
@@ -206,31 +266,43 @@ public class CallLoggerService extends Service {
             @Override
             public void onClick(View v) {
                 showDialog(false);
-                stopService(new Intent(getApplicationContext(), CallLoggerService.class));
+                // stopService(new Intent(getApplicationContext(), CallLoggerService.class));
             }
         });
 
-        personal.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(getApplicationContext(),"Personal Call",Toast.LENGTH_SHORT).show();
-                String contact = getContactName(phone,mContext);
-                Call call = new Call(phone,contact,"PERSONAL");
-                saveCall(call);
-                showDialog(false);
+        personal.setOnClickListener(v -> {
+            Toast.makeText(getApplicationContext(), "Personal Call", Toast.LENGTH_SHORT).show();
+            String contact = getContactName(phone, mContext);
+            Call call = new Call(phone, contact, "PERSONAL");
+            saveCall(call);
+            showDialog(false);
+            Intent intent = new Intent(Intent.ACTION_DIAL);
+            intent.setData(Uri.parse("tel:" + phone));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.addFlags(Intent.FLAG_FROM_BACKGROUND);
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                return;
             }
+            session.setCall(true);
+            mContext.startActivity(intent);
         });
 
-        business.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String x = spinner.getSelectedItem().toString();
-                Toast.makeText(getApplicationContext(),"Business client "+ x,Toast.LENGTH_SHORT).show();
-                String contact = getContactName(phone,mContext);
-                Call call = new Call(phone,contact,"BUSINESS",x);
-                saveCall(call);
-                showDialog(false);
+        business.setOnClickListener(v -> {
+            String x = spinner.getSelectedItem().toString();
+            Toast.makeText(getApplicationContext(), "Business client " + x, Toast.LENGTH_SHORT).show();
+            String contact = getContactName(phone, mContext);
+            Call call = new Call(phone, contact, "BUSINESS", x);
+            saveCall(call);
+            showDialog(false);
+            Intent intent = new Intent(Intent.ACTION_DIAL);
+            intent.setData(Uri.parse("tel:" + phone));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.addFlags(Intent.FLAG_FROM_BACKGROUND);
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                return;
             }
+            session.setCall(true);
+            mContext.startActivity(intent);
         });
 
     }
@@ -294,9 +366,30 @@ public class CallLoggerService extends Service {
         });
     }
 
+    public void filterSim(String phone,String sim){
+        new AsyncTask<Void, Void, Call>() {
+            @Override
+            protected Call doInBackground(Void... params) {
+                return callDAO.getLastCall(phone);
+            }
+            @Override
+            protected void onPostExecute(Call calld) {
+                Call call = calld;
+                if(call != null){
+                    call.setSim(sim);
+                    saveCall(call);
+                }
+            }
+        }.execute();
+    }
+
     @Override
     public final void onDestroy() {
         super.onDestroy();
+
+        Log.i("NIMZYMAINA", "In onDestroy");
+        Intent broadcastIntent = new Intent(Constants.ACTION.RESTART_SERVICE);
+        sendBroadcast(broadcastIntent);
 
         if (mCallAnsweredReceiver != null)
             unregisterReceiver(mCallAnsweredReceiver);
@@ -307,6 +400,9 @@ public class CallLoggerService extends Service {
 
         if (EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().unregister(this);
+
+        if(observer != null)
+            getContentResolver().unregisterContentObserver(observer);
     }
 
 }

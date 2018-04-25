@@ -21,6 +21,7 @@ public class Call {
     private String type;
     private String charge_code;
     private String phone;
+    private String sim;
     private String contact;
     private String duration;
     private String start;
@@ -87,6 +88,14 @@ public class Call {
         this.phone = phone;
     }
 
+    public String getSim() {
+        return sim;
+    }
+
+    public void setSim(String sim) {
+        this.sim = sim;
+    }
+
     public String getContact() {
         return contact;
     }
@@ -142,6 +151,7 @@ public class Call {
                 ", type='" + type + '\'' +
                 ", charge_code='" + charge_code + '\'' +
                 ", phone='" + phone + '\'' +
+                ", sim='" + sim + '\'' +
                 ", contact='" + contact + '\'' +
                 ", duration='" + duration + '\'' +
                 ", start='" + start + '\'' +

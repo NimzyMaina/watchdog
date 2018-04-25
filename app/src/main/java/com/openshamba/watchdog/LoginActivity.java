@@ -8,7 +8,10 @@ import android.provider.Settings;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,10 +29,13 @@ import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.openshamba.watchdog.data.ServiceGenerator;
 import com.openshamba.watchdog.data.responses.ApiResponse;
 import com.openshamba.watchdog.data.responses.LoginResponse;
+import com.openshamba.watchdog.services.CallLoggerService;
+import com.openshamba.watchdog.utils.Constants;
 import com.openshamba.watchdog.utils.ErrorHandler;
 
 import java.util.List;
 
+import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
@@ -37,6 +43,8 @@ public class LoginActivity extends BaseActivity {
 
     private LoginButton loginButton;
     private TextView textView;
+    private Button loginBtn,registerBtn;
+    private EditText edit_username,edit_password;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,59 +55,118 @@ public class LoginActivity extends BaseActivity {
 
         if(session.isLoggedIn()){
             startActivity(new Intent(LoginActivity.this,MainActivity.class));
+            finish();
         }
 
         // Find fb button
-        loginButton = (LoginButton)findViewById(R.id.login_button);
+//        loginButton = (LoginButton)findViewById(R.id.login_button);
+        loginBtn = (Button) findViewById(R.id.login_button);
+        registerBtn = (Button) findViewById(R.id.register_button);
 
-        loginButton.setOnClickListener(new View.OnClickListener() {
+        edit_username = (EditText) findViewById(R.id.edit_username);
+        edit_password = (EditText) findViewById(R.id.edit_password);
+
+        loginBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                loginButton.setVisibility(View.INVISIBLE);
+                String username = edit_username.getText().toString();
+                String password = edit_password.getText().toString();
+                if(username.isEmpty() || password.isEmpty()){
+                    showSnackBar("Please enter your credentials","error");
+                    return;
+                }
+                login(username,password);
             }
         });
+
+        registerBtn.setOnClickListener(v -> startActivity(new Intent(LoginActivity.this,RegisterActivity.class)));
+//
+//        loginButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                loginButton.setVisibility(View.INVISIBLE);
+//            }
+//        });
 
         // assign callback to button
-        loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
-            @Override
-            public void onSuccess(LoginResult loginResult) {
-                login(loginResult.getAccessToken().getToken());
-                //loginButton.setVisibility(View.VISIBLE);
-            }
-
-            @Override
-            public void onCancel() {
-                loginButton.setVisibility(View.VISIBLE);
-                showSnackBar("Login attempt canceled.","error");
-            }
-
-            @Override
-            public void onError(FacebookException e) {
-                loginButton.setVisibility(View.VISIBLE);
-                showSnackBar("Login attempt Failed","error");
-            }
-        });
+//        loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+//            @Override
+//            public void onSuccess(LoginResult loginResult) {
+//                login(loginResult.getAccessToken().getToken());
+//                //loginButton.setVisibility(View.VISIBLE);
+//            }
+//
+//            @Override
+//            public void onCancel() {
+//                loginButton.setVisibility(View.VISIBLE);
+//                showSnackBar("Login attempt canceled.","error");
+//            }
+//
+//            @Override
+//            public void onError(FacebookException e) {
+//                loginButton.setVisibility(View.VISIBLE);
+//                showSnackBar("Login attempt Failed","error");
+//            }
+//        });
     }
 
-    private void login(String auth_token) {
+//    private void login(String auth_token) {
+//
+//        showpDialog("Hang on! Just one more step...");
+//
+//        retrofit2.Call<LoginResponse> call = ServiceGenerator.getClient().login(
+//                auth_token
+//        );
+//
+//        call.enqueue(new Callback<LoginResponse>() {
+//            @Override
+//            public void onResponse(retrofit2.Call<LoginResponse> call, Response<LoginResponse> response) {
+//                hidepDialog();
+//                if(response.isSuccessful()) {
+//
+//                    // Start the call logger foreground service
+//                    Intent startIntent = new Intent(LoginActivity.this, CallLoggerService.class);
+//                    startIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+//                    startService(startIntent);
+//
+//                    session.setLogin(true,response.body().getData());
+//                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
+//                    finish();
+//                }else {
+//                    loginButton.setVisibility(View.VISIBLE);
+//                    fbLogout();
+//                    ApiResponse error = ErrorHandler.parseError(response);
+//                    showSnackBar(error.getMessage(),"error");
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(retrofit2.Call<LoginResponse> call, Throwable t) {
+//                loginButton.setVisibility(View.VISIBLE);
+//                hidepDialog();
+//                fbLogout();
+//                showSnackBar("Please check your internet connection","error");
+//            }
+//        });
+//
+//    }
 
-        showpDialog("Hang on! Just one more step...");
-
-        retrofit2.Call<LoginResponse> call = ServiceGenerator.getClient().login(
-                auth_token
-        );
-
+    private void login(String username, String password){
+        Call call = ServiceGenerator.getClient().login(username,password);
+        showpDialog();
         call.enqueue(new Callback<LoginResponse>() {
             @Override
             public void onResponse(retrofit2.Call<LoginResponse> call, Response<LoginResponse> response) {
                 hidepDialog();
-                if(response.isSuccessful()) {
+                if(response.isSuccessful()){
+                    Intent startIntent = new Intent(LoginActivity.this, CallLoggerService.class);
+                    startIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+                    startService(startIntent);
+
                     session.setLogin(true,response.body().getData());
                     startActivity(new Intent(LoginActivity.this, MainActivity.class));
                     finish();
-                }else {
-                    loginButton.setVisibility(View.VISIBLE);
-                    fbLogout();
+                }else{
                     ApiResponse error = ErrorHandler.parseError(response);
                     showSnackBar(error.getMessage(),"error");
                 }
@@ -107,13 +174,10 @@ public class LoginActivity extends BaseActivity {
 
             @Override
             public void onFailure(retrofit2.Call<LoginResponse> call, Throwable t) {
-                loginButton.setVisibility(View.VISIBLE);
                 hidepDialog();
-                fbLogout();
                 showSnackBar("Please check your internet connection","error");
             }
         });
-
     }
 
     public void requestPerm(){
@@ -182,5 +246,13 @@ public class LoginActivity extends BaseActivity {
         Uri uri = Uri.fromParts("package", getPackageName(), null);
         intent.setData(uri);
         startActivityForResult(intent, 101);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.i("EXIT", "ondestroy!");
+        Intent broadcastIntent = new Intent(Constants.ACTION.STOPFOREGROUND_ACTION);
+        sendBroadcast(broadcastIntent);
     }
 }

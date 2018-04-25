@@ -23,6 +23,7 @@ public class SessionManager {
     private static final String KEY_UID = "id";
     private static final String KEY_FNAME = "first_name";
     private static final String KEY_LNAME = "last_name";
+    private static final String KEY_CALL = "can_call";
 
 
     // Shared preferences file name
@@ -68,5 +69,15 @@ public class SessionManager {
 
     public String getKeyLname(){
         return pref.getString(KEY_LNAME,"");
+    }
+
+    public boolean canCall(){
+        return  pref.getBoolean(KEY_CALL,false);
+    }
+
+    public void setCall(boolean state){
+        editor.putBoolean(KEY_CALL,state);
+        // commit changes
+        editor.commit();
     }
 }

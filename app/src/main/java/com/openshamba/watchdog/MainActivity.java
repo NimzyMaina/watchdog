@@ -49,7 +49,9 @@ import com.openshamba.watchdog.fragments.CallFragment;
 import com.openshamba.watchdog.fragments.DataFragment;
 import com.openshamba.watchdog.fragments.FragmentAdapter;
 import com.openshamba.watchdog.fragments.SMSFragment;
+import com.openshamba.watchdog.services.CallLoggerService;
 import com.openshamba.watchdog.services.SmsLoggerService;
+import com.openshamba.watchdog.utils.Constants;
 import com.openshamba.watchdog.utils.CustomApplication;
 import com.openshamba.watchdog.utils.MobileUtils;
 import com.openshamba.watchdog.utils.SessionManager;
@@ -85,8 +87,10 @@ public class MainActivity extends BaseActivity {
             askSystemAlertPermission(MainActivity.this,ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE);
         }
 
-        if(!CustomApplication.isMyServiceRunning(SmsLoggerService.class)){
-            startService(new Intent(getApplicationContext(), SmsLoggerService.class));
+        if(!CustomApplication.isMyServiceRunning(CallLoggerService.class)){
+            Intent startIntent = new Intent(getApplicationContext(), CallLoggerService.class);
+            startIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+            startService(startIntent);
         }
 
         checkAuth();

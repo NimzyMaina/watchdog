@@ -14,11 +14,12 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ServiceGenerator {
-    private static final String API_BASE_URL = "http://192.168.0.14/watchdog-api/public/index.php/";
+    //private static final String API_BASE_URL = "http://192.168.0.14/watchdog-api/public/index.php/";
+    private static final String API_BASE_URL = "http://watchdog.cf/";
     private static Retrofit retrofit;
 
     private static OkHttpClient.Builder httpClient = new OkHttpClient.Builder()
-            .connectTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(40, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS);
 

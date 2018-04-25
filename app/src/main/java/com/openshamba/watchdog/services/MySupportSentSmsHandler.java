@@ -2,8 +2,8 @@ package com.openshamba.watchdog.services;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.ContentObservable;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.PixelFormat;
@@ -31,7 +31,6 @@ import com.openshamba.watchdog.data.ServiceGenerator;
 import com.openshamba.watchdog.data.responses.ApiResponse;
 import com.openshamba.watchdog.entities.Sms;
 import com.openshamba.watchdog.entities.doas.SmsDAO;
-import com.openshamba.watchdog.utils.CustomApplication;
 import com.openshamba.watchdog.utils.SessionManager;
 
 import java.text.SimpleDateFormat;
@@ -46,12 +45,15 @@ import retrofit2.Response;
 
 import static android.content.Context.LAYOUT_INFLATER_SERVICE;
 import static android.content.Context.WINDOW_SERVICE;
-import static android.provider.Telephony.TextBasedSmsColumns.DATE;
 import static android.provider.Telephony.TextBasedSmsColumns.MESSAGE_TYPE_SENT;
-import static android.provider.Telephony.TextBasedSmsColumns.STATUS;
 import static android.provider.Telephony.TextBasedSmsColumns.STATUS_COMPLETE;
 
-public class MySentSmsHandler extends ContentObserver {
+/**
+ * Created by Maina on 3/20/2018.
+ */
+
+public class MySupportSentSmsHandler extends ContentObserver {
+
     private Context mContext;
 
     // Pop up shit
@@ -66,26 +68,29 @@ public class MySentSmsHandler extends ContentObserver {
     private String phone;
     private Sms sms;
     private SessionManager session;
-    private int count = 0;
-    private boolean hudShown = false;
 
     private final Executor executor = Executors.newFixedThreadPool(2);
     private SmsDAO smsDAO;
 
-    public MySentSmsHandler(Context context){
+    public MySupportSentSmsHandler(Context context) {
         super(new Handler());
         mContext=context;
         smsDAO = DatabaseCreator.getWatchDogDatabase(context).SmsDatabase();
         session = new SessionManager(context);
     }
-    public void onChange(boolean selfChange) {
-        CustomApplication.sleep(1000);
-        //Cursor cursor = mContext.getContentResolver().query(Uri.parse("content://sms"), null,STATUS + " = ? " , new String[] { STATUS_COMPLETE+"" }, DATE+" DESC");
-        Cursor cursor = mContext.getContentResolver().query(Uri.parse("content://sms"), null, null, null, "date DESC LIMIT 1");
-        if (cursor.moveToLast()) {
-            String protocol = cursor.getString(cursor.getColumnIndex("protocol"));
-            String type = cursor.getString(cursor.getColumnIndexOrThrow("type")).toString();
 
+    public void onChange(boolean selfChange){
+        Cursor cursor = mContext.getContentResolver().query(
+                Uri.parse("content://sms"), null, null, null, null);
+        if (cursor.moveToNext()) {
+            for (int i = 0; i < cursor.getColumnCount(); i++) {
+                Log.d("NIMZYMAINA", cursor.getColumnName(i) + " === " + cursor.getString(i) + "");
+            }
+
+            Log.d("NIMZYMAINA", "Two row finished support **************************************************");
+
+            String protocol = cursor.getString(cursor.getColumnIndex("protocol"));
+            int type = cursor.getInt(cursor.getColumnIndex("type"));
             int status = cursor.getInt(cursor.getColumnIndex("status"));
             String sim = cursor.getString(cursor.getColumnIndex("sub_id"));
             String phone = cursor.getString(cursor.getColumnIndex("address"));
@@ -95,51 +100,22 @@ public class MySentSmsHandler extends ContentObserver {
             Date time = new Date(cursor.getLong(cursor.getColumnIndex("date")));
             // Only processing outgoing sms event & only when it
             // is sent successfully (available in SENT box).
-
-
-            if (sim.equals("-1")) {
-                sim = cursor.getString(cursor.getColumnIndex("sim_slot"));
-            }
-            Log.d("NIMZYMAINA", "SMS change for SIM: === " + sim);
-
-//            for (int i = 0; i < cursor.getColumnCount(); i++) {
-//                Log.d("NIMZYMAINA", cursor.getColumnName(i) + " === " + cursor.getString(i) + "");
-//            }
-//            Log.d("NIMZYMAINA", "One row finished **************************************************");
-
-
-            if (count > 2 && type.equals("2") && status == STATUS_COMPLETE && sim.equals("0")) {
-
-                for (int i = 0; i < cursor.getColumnCount(); i++) {
-                    Log.d("NIMZYMAINA", cursor.getColumnName(i) + " === " + cursor.getString(i) + "");
-                }
-
-                Log.d("NIMZYMAINA", "Two row finished **************************************************");
-
-//            if (protocol != null || type != MESSAGE_TYPE_SENT || status != STATUS_COMPLETE || !sim.equals("1")) {
-//                return;
-//            }
-
-                sms = new Sms(Integer.parseInt(id), phone, "", "", UUID.randomUUID().toString(), sdf.format(time));
-
-                setUpDialogWindow();
-
-                fetchContactName(phone);
-
-                if(!hudShown)
-                    showDialog(true);
-
-                Toast.makeText(mContext, "SMS sent to " + phone + " from sim " + sim, Toast.LENGTH_LONG).show();
-
-                Log.d("NIMZYMAINA", "SMS sent to " + phone + " from sim " + sim);
+            if (protocol != null || type != MESSAGE_TYPE_SENT || status != STATUS_COMPLETE || !sim.equals("1")) {
+                return;
             }
 
-            if(type.equals("2") && sim.equals("0")){
-                if (count >= 4) {
-                    count = -1;
-                }
-                count++;
-            }
+
+            sms = new Sms(Integer.parseInt(id),phone,"","", UUID.randomUUID().toString(),sdf.format(time));
+
+            setUpDialogWindow();
+
+            fetchContactName(phone);
+
+            showDialog(true);
+
+            Toast.makeText(mContext,"SMS sent to " + phone + " from sim " + sim,Toast.LENGTH_LONG).show();
+
+            Log.d("NIMZYMAINA","SMS sent to " + phone + " from sim " + sim);
         }
     }
 
@@ -176,8 +152,7 @@ public class MySentSmsHandler extends ContentObserver {
         close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(hudShown)
-                    showDialog(false);
+                showDialog(false);
             }
         });
 
@@ -188,9 +163,7 @@ public class MySentSmsHandler extends ContentObserver {
                 sms.setContact(getContactName(phone,mContext));
                 sms.setType("PERSONAL");
                 saveSms(sms);
-
-                if(hudShown)
-                    showDialog(false);
+                showDialog(false);
 
                 syncSms(sms);
             }
@@ -200,14 +173,12 @@ public class MySentSmsHandler extends ContentObserver {
             @Override
             public void onClick(View v) {
                 String x = spinner.getSelectedItem().toString();
-                Toast.makeText(mContext,"Business client "+ x,Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext,"Business client "+ x, Toast.LENGTH_SHORT).show();
                 sms.setContact(getContactName(phone,mContext));
                 sms.setCharge_code(x);
                 sms.setType("BUSINESS");
                 saveSms(sms);
-
-                if(hudShown)
-                    showDialog(false);
+                showDialog(false);
 
                 syncSms(sms);
             }
@@ -216,17 +187,15 @@ public class MySentSmsHandler extends ContentObserver {
     }
 
     private void showDialog(boolean state){
-        hudShown = state;
         if(state){
             windowManager.addView(chatheadView, params);
         }else{
             windowManager.removeViewImmediate(chatheadView);
-//            windowManager.removeView(chatheadView);
         }
     }
 
     private String getContactName(final String phoneNumber, Context context) {
-        Uri uri=Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI,Uri.encode(phoneNumber));
+        Uri uri= Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI,Uri.encode(phoneNumber));
 
         String[] projection = new String[]{ContactsContract.PhoneLookup.DISPLAY_NAME};
 
@@ -295,5 +264,7 @@ public class MySentSmsHandler extends ContentObserver {
             }
         });
     }
+
+
 
 }

@@ -33,4 +33,20 @@ public interface WatchDogClient {
     @POST("api/v1/sms")
     Call<ApiResponse> saveSms(@Body Sms sms);
 
+    @Headers({"Cache-Control: no-cache"})
+    @FormUrlEncoded
+    @POST("api/v1/auth")
+    Call<LoginResponse> login(
+            @Field("login") String login,
+            @Field("password") String password
+    );
+
+    @FormUrlEncoded
+    @POST("api/v1/register")
+    Call<ApiResponse> register(
+        @Field("username") String username,
+        @Field("password") String password,
+        @Field("password_confirmation") String password_confirmation
+    );
+
 }

@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:fitsSystemWindows="true"
-    tools:ignore="ContentDescription">
+    tools:ignore="ContentDescription"
+    tools:context="com.openshamba.watchdog.RegisterActivity">
 
     <ImageView
         android:layout_width="match_parent"
@@ -66,6 +68,19 @@
                     android:textColor="@color/textPrimary"
                     android:textSize="16sp" />
 
+                <EditText
+                    android:id="@+id/edit_password_confirm"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:background="@null"
+                    android:hint="@string/hint_password_confirm"
+                    android:inputType="textPassword"
+                    android:padding="8dp"
+                    android:singleLine="true"
+                    android:textColor="@color/textPrimary"
+                    android:textSize="16sp" />
+
             </LinearLayout>
 
             <com.balysv.materialripple.MaterialRippleLayout
@@ -75,23 +90,15 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="@dimen/spacing_large">
 
-            <Button
-                android:id="@+id/login_button"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_button_rounded"
-                android:text="@string/login"
-                android:textColor="@android:color/white" />
+                <Button
+                    android:id="@+id/register_button"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_button_rounded"
+                    android:text="@string/register"
+                    android:textColor="@android:color/white" />
             </com.balysv.materialripple.MaterialRippleLayout>
 
-            <Button
-                android:id="@+id/register_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@android:color/white"
-                android:layout_marginTop="25dp"
-                android:text="@string/register"
-                style="@style/Base.Widget.AppCompat.Button.Borderless"/>
 
         </LinearLayout>
 
