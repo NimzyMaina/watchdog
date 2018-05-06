@@ -1,11 +1,11 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 26
+    compileSdkVersion 27
     defaultConfig {
         applicationId "com.openshamba.watchdog"
         minSdkVersion 15
-        targetSdkVersion 26
+        targetSdkVersion 27
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -29,20 +29,22 @@ android {
 }
 
 def archComp = '1.0.0'
-def support = '26.1.0'
+def arch2 = '1.1.1'
+def support = '27.1.1'
 def retrofit = '2.3.0'
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "com.android.support:appcompat-v7:${support}"
-    implementation "com.android.support:cardview-v7:${support}"
-    implementation "com.android.support:recyclerview-v7:${support}"
-    //implementation "com.android.support:design:${support}"
-    implementation "com.android.support:support-v4:${support}"
-    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    //noinspection GradleCompatible
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation "com.android.support:cardview-v7:27.1.1"
+    implementation "com.android.support:recyclerview-v7:27.1.1"
+    implementation "com.android.support:design:27.1.1"
+    implementation "com.android.support:support-v4:27.1.1"
+    implementation 'com.android.support.constraint:constraint-layout:1.1.0'
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.1'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
     // Dexter runtime permissions
     implementation 'com.karumi:dexter:4.2.0'
@@ -53,18 +55,22 @@ dependencies {
     // Room
     implementation "android.arch.persistence.room:runtime:${archComp}"
     annotationProcessor "android.arch.persistence.room:compiler:${archComp}"
-    implementation "android.arch.lifecycle:extensions:${archComp}"
+    implementation "android.arch.lifecycle:extensions:${arch2}"
     implementation "android.arch.persistence.room:rxjava2:${archComp}"
+    implementation "android.arch.lifecycle:runtime:${arch2}"
 
     // Retrofit
     implementation "com.squareup.retrofit2:retrofit:${retrofit}"
     implementation "com.squareup.retrofit2:converter-gson:${retrofit}"
-    implementation "com.squareup.okhttp3:logging-interceptor:3.8.0"
+    implementation "com.squareup.okhttp3:logging-interceptor:3.9.1"
 
     // UI stuff
     implementation 'com.squareup.picasso:picasso:2.5.2'
     implementation 'com.balysv:material-ripple:1.0.2'
 
     // Facebook SDK
-    implementation 'com.facebook.android:facebook-android-sdk:4.30.0'
+    implementation 'com.facebook.android:facebook-android-sdk:4.32.0'
+
+    // Joda time thing
+    implementation 'joda-time:joda-time:2.9.9'
 }

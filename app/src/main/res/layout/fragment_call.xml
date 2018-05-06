@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <android.support.v7.widget.RecyclerView
+    <com.openshamba.watchdog.utils.EmptyRecyclerView
         android:id="@+id/recyclerView"
         android:scrollingCache="false"
         android:cacheColorHint="#0000"
@@ -31,14 +31,16 @@
         android:visibility="gone"
         android:orientation="vertical">
         <ImageView
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:src="@drawable/ic_not_found"/>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="30dp"
+            android:src="@drawable/ic_empty"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
-            android:text="No Chat found"/>
+            android:textSize="20sp"
+            android:text="No Calls found"/>
     </LinearLayout>
 
 </RelativeLayout>

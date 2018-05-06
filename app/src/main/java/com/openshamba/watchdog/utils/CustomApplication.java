@@ -8,19 +8,24 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
+import android.util.Log;
 
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.DexterBuilder;
 import com.openshamba.watchdog.MainActivity;
 
+import java.io.File;
 import java.lang.ref.WeakReference;
 import java.security.Permission;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -32,6 +37,7 @@ public class CustomApplication extends Application {
 
     private static Boolean mIsOldMtkDevice = null;
     private static WeakReference<Context> mWeakReference;
+    private static boolean mIsActivityVisible;
 
     private Context context;
 
@@ -40,6 +46,10 @@ public class CustomApplication extends Application {
     public final void onCreate() {
         super.onCreate();
         mWeakReference = new WeakReference<>(getApplicationContext());
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getAppContext());
+
+
 
     }
 
@@ -76,9 +86,17 @@ public class CustomApplication extends Application {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor edit = preferences.edit();
 
-        if (!preferences.contains(Constants.PREF_OTHER[0])){
-            edit.putInt(Constants.PREF_OTHER[0],MobileUtils.isMultiSim(context)).apply();
-        }
+        ArrayList imsi = MobileUtils.getSimIds(context);
+        if (imsi.size() > 0 && preferences.getBoolean(Constants.PREF_OTHER[2], false))
+            loadTrafficPreferences(imsi);
+
+        Log.d(Constants.LOG,"SIM QTY: "+MobileUtils.isMultiSim(context));
+        Log.d(Constants.LOG,"PREF SIM: "+preferences.getInt(Constants.PREF_OTHER[0],-1));
+        if (!preferences.contains(Constants.PREF_OTHER[0]))
+            edit.putInt(Constants.PREF_OTHER[0], MobileUtils.isMultiSim(context))
+                    .apply();
+
+        Log.d(Constants.LOG,"PREF SIM Again: "+preferences.getInt(Constants.PREF_OTHER[0],-2));
 
         //Store subids
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
@@ -118,6 +136,91 @@ public class CustomApplication extends Application {
             }
         } catch (Exception e) {
             return false;
+        }
+        return false;
+    }
+
+    public static void putObject(SharedPreferences.Editor editor, String key, Object o) {
+        if (o == null)
+            editor.putString(key, "null");
+        else if (o instanceof String)
+            editor.putString(key, (String) o);
+        else if (o instanceof Boolean)
+            editor.putBoolean(key, (boolean) o);
+    }
+
+    public static void loadTrafficPreferences(ArrayList imsi) {
+        if (imsi != null && imsi.size() > 0) {
+            Context context = mWeakReference.get();
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+            int simQuantity = preferences.getInt(Constants.PREF_OTHER[55], 1);
+            String path = context.getFilesDir().getParent() + "/shared_prefs/";
+            SharedPreferences.Editor editor = preferences.edit();
+            SharedPreferences prefSim;
+            Map<String, ?> prefsMap;
+            String name = Constants.TRAFFIC + "_" + imsi.get(0);
+            if (new File(path + name + ".xml").exists()) {
+                prefSim = context.getSharedPreferences(name, Context.MODE_PRIVATE);
+                prefsMap = prefSim.getAll();
+                if (prefsMap.size() != 0)
+                    for (String key : prefsMap.keySet()) {
+                        Object o = prefsMap.get(key);
+                        key = key + 1;
+                        putObject(editor, key, o);
+                    }
+                prefSim = null;
+            }
+            if (simQuantity >= 2) {
+                name = Constants.TRAFFIC + "_" + imsi.get(1);
+                if (new File(path + name + ".xml").exists()) {
+                    prefSim = context.getSharedPreferences(name, Context.MODE_PRIVATE);
+                    prefsMap = prefSim.getAll();
+                    if (prefsMap.size() != 0)
+                        for (String key : prefsMap.keySet()) {
+                            Object o = prefsMap.get(key);
+                            key = key + 2;
+                            putObject(editor, key, o);
+                        }
+                    prefSim = null;
+                }
+            }
+            if (simQuantity == 3) {
+                name = Constants.TRAFFIC + "_" + imsi.get(2);
+                if (new File(path + name + ".xml").exists()) {
+                    prefSim = context.getSharedPreferences(name, Context.MODE_PRIVATE);
+                    prefsMap = prefSim.getAll();
+                    if (prefsMap.size() != 0)
+                        for (String key : prefsMap.keySet()) {
+                            Object o = prefsMap.get(key);
+                            key = key + 3;
+                            putObject(editor, key, o);
+                        }
+                    prefSim = null;
+                }
+            }
+            editor.apply();
+        }
+    }
+
+    public static boolean isActivityVisible() {
+        return mIsActivityVisible;
+    }
+
+    public static void resumeActivity() {
+        mIsActivityVisible = true;
+    }
+
+    public static void pauseActivity() {
+        mIsActivityVisible = false;
+    }
+
+    public static boolean isScreenOn() {
+        PowerManager pm = (PowerManager) mWeakReference.get().getSystemService(Context.POWER_SERVICE);
+        if (pm != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1)
+                return pm.isInteractive();
+            else
+                return pm.isScreenOn();
         }
         return false;
     }

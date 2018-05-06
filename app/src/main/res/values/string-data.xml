@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="groups_name">
+        <item>Traffic Stats</item>
+        <item>Data Sessions</item>
+        <item>Traffic by Date</item>
+    </string-array>
+
+    <string-array name="groups_date">
+        <item>10 Days ago</item>
+        <item>Today</item>
+        <item>Yesterday</item>
+    </string-array>
+
+    <integer-array name="groups_photos">
+        <item>@drawable/ic_group_collage</item>
+        <item>@drawable/ic_group_hangout</item>
+        <item>@drawable/ic_group_catlovers</item>
+    </integer-array>
+
+</resources>

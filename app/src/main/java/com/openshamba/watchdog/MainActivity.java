@@ -6,9 +6,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Build;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.AppBarLayout;
@@ -51,15 +53,19 @@ import com.openshamba.watchdog.fragments.FragmentAdapter;
 import com.openshamba.watchdog.fragments.SMSFragment;
 import com.openshamba.watchdog.services.CallLoggerService;
 import com.openshamba.watchdog.services.SmsLoggerService;
+import com.openshamba.watchdog.services.TrafficCountService;
+import com.openshamba.watchdog.services.WatchDogService;
 import com.openshamba.watchdog.utils.Constants;
 import com.openshamba.watchdog.utils.CustomApplication;
 import com.openshamba.watchdog.utils.MobileUtils;
 import com.openshamba.watchdog.utils.SessionManager;
 import com.openshamba.watchdog.utils.Tools;
 
+import org.greenrobot.eventbus.EventBus;
+
 import java.util.List;
 
-public class MainActivity extends BaseActivity {
+public class MainActivity extends BaseActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     private ActionBarDrawerToggle mDrawerToggle;
     private Toolbar toolbar;
@@ -76,12 +82,15 @@ public class MainActivity extends BaseActivity {
 
     public static int ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE = 5469;
     private boolean isSearch = false;
+    private SharedPreferences mPrefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         parent_view = findViewById(R.id.main_content);
+
+        checkAuth();
 
         if(!isSystemAlertPermissionGranted(getApplicationContext())){
             askSystemAlertPermission(MainActivity.this,ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE);
@@ -93,7 +102,16 @@ public class MainActivity extends BaseActivity {
             startService(startIntent);
         }
 
-        checkAuth();
+        if(!CustomApplication.isMyServiceRunning(TrafficCountService.class)){
+            startService(new Intent(getApplicationContext(),TrafficCountService.class));
+        }
+
+        mPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+        if (!CustomApplication.isMyServiceRunning(WatchDogService.class) && mPrefs.getBoolean(Constants.PREF_OTHER[4], true)) {
+            startService(new Intent(getApplicationContext(), WatchDogService.class));
+        }
+
 
         setupDrawerLayout();
         initComponent();
@@ -198,8 +216,9 @@ public class MainActivity extends BaseActivity {
                 .withListener(new PermissionListener() {
                     @Override
                     public void onPermissionGranted(PermissionGrantedResponse response) {
+                        Log.d(Constants.LOG,"Setting up application");
                         CustomApplication.setUp(getApplicationContext());
-                        //Snackbar.make(parent_view,"Setup complete",Snackbar.LENGTH_LONG).show();
+                        Snackbar.make(parent_view,"Setup complete",Snackbar.LENGTH_LONG).show();
                     }
 
                     @Override
@@ -457,5 +476,30 @@ public class MainActivity extends BaseActivity {
     @Override
     public void onBackPressed() {
         doExitApp();
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals(Constants.PREF_OTHER[4])) {
+            if (!sharedPreferences.getBoolean(key, false)) {
+                stopService(new Intent(getApplicationContext(), WatchDogService.class));
+                mPrefs.edit().putBoolean(Constants.PREF_OTHER[9], true).apply();
+            } else {
+                startService(new Intent(getApplicationContext(), WatchDogService.class));
+                mPrefs.edit().putBoolean(Constants.PREF_OTHER[9], false).apply();
+            }
+        }
+    }
+
+    @Override
+    public final void onResume() {
+        super.onResume();
+        CustomApplication.resumeActivity();
+    }
+
+    @Override
+    public final void onPause() {
+        super.onPause();
+        CustomApplication.pauseActivity();
     }
 }

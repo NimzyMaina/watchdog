@@ -2,6 +2,8 @@ package com.openshamba.watchdog.utils;
 
 import android.app.Activity;
 import android.os.Build;
+import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -21,6 +23,15 @@ public class Tools {
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
             window.setStatusBarColor(act.getResources().getColor(R.color.colorPrimaryDark));
         }
+    }
+
+    public static int getGridSpanCount(Activity activity) {
+        Display display = activity.getWindowManager().getDefaultDisplay();
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        display.getMetrics(displayMetrics);
+        float screenWidth  = displayMetrics.widthPixels;
+        float cellWidth = activity.getResources().getDimension(R.dimen.recycler_item_size);
+        return Math.round(screenWidth / cellWidth);
     }
 
 

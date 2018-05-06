@@ -30,4 +30,27 @@
     <string name="hint_username">Enter Username</string>
     <string name="hint_password">Enter Password</string>
     <string name="hint_password_confirm">Retype Password</string>
+
+
+    <string name="not_available">Not avail.</string>
+
+    <string name="seconds">00 m %1$02d s</string>
+    <string name="minutes_seconds">%1$02d m %2$02d s</string>
+
+    <string name="kb">" KB"</string>
+    <string name="mb">" MB"</string>
+    <string name="gb">" GB"</string>
+    <string name="received">Received</string>
+    <string name="transmitted">Transmitted</string>
+    <string name="total">Total</string>
+
+    <string name="data_dis">Mobile data disabled</string>
+    <string name="other_network">Mobile data disabled. Other network is active (Wi-Fi, Bluetooth etc.)</string>
+    <string name="sim1_act">SIM1 is active: %1$s/s || %2$s/s</string>
+    <string name="sim2_act">SIM2 is active: %1$s/s || %2$s/s</string>
+    <string name="sim3_act">SIM3 is active: %1$s/s || %2$s/s</string>
+    <string name="not_supported">Your device is not supported</string>
+
+    <string name="go_to_settings">Go to Settings-Data Usage</string>
+
 </resources>
